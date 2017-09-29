@@ -89,7 +89,7 @@ def camPosToQuaternion(cx, cy, cz):
     roll = math.acos(tmp)
     if cz < 0:
         roll = -roll    
-    print("%f %f %f" % (yaw, pitch, roll))
+    #print("%f %f %f" % (yaw, pitch, roll))
     q2a, q2b, q2c, q2d = quaternionFromYawPitchRoll(yaw, pitch, roll)    
     q1 = q1a * q2a - q1b * q2b - q1c * q2c - q1d * q2d
     q2 = q1b * q2a + q1a * q2b + q1d * q2c - q1c * q2d
@@ -140,13 +140,21 @@ bg_folder = sys.argv[-2]
 syn_images_folder = sys.argv[-1]
 if not os.path.exists(syn_images_folder):
     os.mkdir(syn_images_folder)
-view_params = [[float(x) for x in line.strip().split(' ')] for line in open(shape_view_params_file).readlines()]
+#view_params = [[float(x) for x in line.strip().split(' ')] for line in open(shape_view_params_file).readlines()]
 
 if not os.path.exists(syn_images_folder):
     os.makedirs(syn_images_folder)
 
 #bpy.context.scene.render.use_shadows = False
 #bpy.context.scene.render.use_raytrace = False
+
+#size = bpy.data.objects['Drone'].dimensions
+from scipy.spatial import Delaunay
+bound_box = Delaunay(bpy.data.objects['Drone'].bound_box)
+#azi = np.random.normal(0, 360, 5)
+#ele = np.random.normal(0, 180, 5)
+#the = np.random.normal(0, 360, 5)
+#rho = np.random.normal(0, 5, 5)
 
 bpy.data.objects['Lamp'].data.energy = 0
 
@@ -164,11 +172,11 @@ bpy.ops.object.delete()
 
 # YOUR CODE START HERE
 count = 0
-for param in view_params:
-    azimuth_deg = param[0]
-    elevation_deg = param[1]
-    theta_deg = param[2]
-    rho = param[3]
+for i in range(0, 20):
+    azimuth_deg = np.random.normal(0, 360, 1)[0]
+    elevation_deg = np.random.normal(0, 180, 1)[0]
+    theta_deg = np.random.normal(0, 360, 1)[0]
+    rho = np.random.normal(0, 5, 1)[0]
 
     # clear default lights
     bpy.ops.object.select_by_type(type='LAMP')
@@ -203,6 +211,7 @@ for param in view_params:
     camObj.rotation_quaternion[3] = q[3]
     # ** multiply tilt by -1 to match pascal3d annotations **
     theta_deg = (-1*theta_deg)%360
+
     ##-------- Adding BG---------------------
     for f in os.listdir(bg_folder):
         img = bpy.data.images.load(os.path.join(bg_folder, f))
