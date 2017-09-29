@@ -133,22 +133,18 @@ def obj_centened_camera_pos(dist, azimuth_deg, elevation_deg):
     return (x, y, z)
 
 # Input parameters
-shape_file = sys.argv[-5]
-shape_synset = sys.argv[-4]
-shape_md5 = sys.argv[-3]
-shape_view_params_file = sys.argv[-2]
+shape_synset = sys.argv[-5]
+shape_md5 = sys.argv[-4]
+shape_view_params_file = sys.argv[-3]
+bg_folder = sys.argv[-2]
 syn_images_folder = sys.argv[-1]
 if not os.path.exists(syn_images_folder):
     os.mkdir(syn_images_folder)
-#syn_images_folder = os.path.join(g_syn_images_folder, shape_synset, shape_md5) 
 view_params = [[float(x) for x in line.strip().split(' ')] for line in open(shape_view_params_file).readlines()]
 
 if not os.path.exists(syn_images_folder):
     os.makedirs(syn_images_folder)
 
-bpy.ops.import_scene.obj(filepath=shape_file) 
-
-bpy.context.scene.render.alpha_mode = 'TRANSPARENT'
 #bpy.context.scene.render.use_shadows = False
 #bpy.context.scene.render.use_raytrace = False
 
@@ -167,7 +163,7 @@ if 'Lamp' in list(bpy.data.objects.keys()):
 bpy.ops.object.delete()
 
 # YOUR CODE START HERE
-
+count = 0
 for param in view_params:
     azimuth_deg = param[0]
     elevation_deg = param[1]
@@ -207,7 +203,23 @@ for param in view_params:
     camObj.rotation_quaternion[3] = q[3]
     # ** multiply tilt by -1 to match pascal3d annotations **
     theta_deg = (-1*theta_deg)%360
-    syn_image_file = './%s_%s_a%03d_e%03d_t%03d_d%03d.png' % (shape_synset, shape_md5, round(azimuth_deg), round(elevation_deg), round(theta_deg), round(rho))
-    bpy.data.scenes['Scene'].render.filepath = os.path.join(syn_images_folder, syn_image_file)
-    bpy.ops.render.render( write_still=True )
+    ##-------- Adding BG---------------------
+    for f in os.listdir(bg_folder):
+        img = bpy.data.images.load(os.path.join(bg_folder, f))
+        for area in bpy.context.screen.areas:
+            if area.type == 'VIEW_3D':
+                space_data = area.spaces.active
+                bg = space_data.background_images.new()
+                bg.image = img
+                space_data.show_background_images = True
+                break
+        tex = bpy.data.textures.new("Texture.001", 'IMAGE')
+        tex.image = img
+        bpy.data.worlds['World'].active_texture = tex
+        bpy.context.scene.world.texture_slots[0].use_map_horizon = True
+    ##----------------------------------------
+        syn_image_file = './%d_%s_%s_a%03d_e%03d_t%03d_d%03d.png' % (count, shape_synset, shape_md5, round(azimuth_deg), round(elevation_deg), round(theta_deg), round(rho))
+        count += 1
+        bpy.data.scenes['Scene'].render.filepath = os.path.join(syn_images_folder, syn_image_file)
+        bpy.ops.render.render(write_still=True )
 
