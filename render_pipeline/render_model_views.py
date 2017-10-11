@@ -5,7 +5,7 @@ RENDER_MODEL_VIEWS.py
 brief:
 	render projections of a 3D model from viewpoints specified by an input parameter file
 usage:
-	blender blank.blend --background --python render_model_views.py -- <shape_obj_filename> <shape_category_synset> <shape_model_md5> <shape_view_param_file> <syn_img_output_folder>
+	blender DAVidDroneTex.blend --background --python render_model_views.py -- <shape_category_synset> <shape_model_md5> <shape_view_param_file><backgrounds_folder><syn_img_output_folder>
 
 inputs:
        <shape_obj_filename>: .obj file of the 3D shape model
@@ -151,10 +151,6 @@ if not os.path.exists(syn_images_folder):
 #size = bpy.data.objects['Drone'].dimensions
 from scipy.spatial import Delaunay
 bound_box = Delaunay(bpy.data.objects['Drone'].bound_box)
-#azi = np.random.normal(0, 360, 5)
-#ele = np.random.normal(0, 180, 5)
-#the = np.random.normal(0, 360, 5)
-#rho = np.random.normal(0, 5, 5)
 
 bpy.data.objects['Lamp'].data.energy = 0
 

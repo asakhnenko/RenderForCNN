@@ -12,51 +12,43 @@ Running this program will populate following folders:
 
 import os
 import sys
+import lmdb
 from data_prep_helper import *
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(BASE_DIR)
 sys.path.append(os.path.dirname(BASE_DIR))
-from global_variables import *
+#from global_variables import *
 
 if __name__ == '__main__':
+    folder_with_img = sys.argv[1]
+    folder_for_txt_files = sys.argv[2]
+    txt_with_drone_types = sys.argv[3]
 
     # ----------------------------------
     # ---- SYNTHESIZED IMAGES ----------
     # ----------------------------------
 
-    if not os.path.exists(g_syn_images_lmdb_folder):
-        os.mkdir(g_syn_images_lmdb_folder)
+    if not os.path.exists(folder_for_txt_files):
+        os.mkdir(folder_for_txt_files)
+    ##------------------------aly----------------------------
+    # Separate generated images into two categories
+    lines = [line.rstrip() for line in open(txt_with_drone_types, 'r')]
+    drone_types = []
 
-    # get image filenames and labels, separated to train/test sets
-    for idx, synset in enumerate(g_shape_synsets):
-        name = g_shape_names[idx]
-        get_one_category_image_label_file(synset, os.path.join(g_syn_images_lmdb_folder, name+'_train.txt'), os.path.join(g_syn_images_lmdb_folder, name+'_test.txt'))
-
+    for line in lines:
+        ll = line.split(' ')
+        drone_id = ll[0]
+        drone_name = ll[1]
+        drone_types.append(drone_name)
+        get_one_category_image_label_file(folder_with_img,os.path.join(folder_for_txt_files, drone_name+'_train.txt'),
+                                          os.path.join(folder_for_txt_files, drone_name+'_test.txt'))
+    ##------------------------aly----------------------------
     for keyword in ['train', 'test']:
-        # combine filenames&labels from all 12 classes (shuffled)
-        input_file_list = [os.path.join(g_syn_images_lmdb_folder, '%s_%s.txt' % (name, keyword)) for name in g_shape_names]
-        output_file = os.path.join(g_syn_images_lmdb_folder, 'all_%s.txt' % (keyword))
+        input_file_list = [os.path.join(folder_for_txt_files, '%s_%s.txt' % (drone_type, keyword))
+                           for drone_type in drone_types]
+        output_file = os.path.join(folder_for_txt_files, 'all_%s.txt' % keyword)
         combine_files(input_file_list, output_file)
         
         # generate LMDB
-        generate_image_view_lmdb(output_file, '%s_%s' % (g_syn_images_lmdb_pathname_prefix, keyword))
-
-    
-    # ----------------------------------
-    # ---- VOC12 TRAIN SET -------------
-    # ----------------------------------
-
-    # prepare voc12train gt bbox images and its LMDB
-    matlab_cmd = "addpath('%s'); prepare_voc12_imgs('train','%s',struct('flip',%d,'aug_n',%d,'jitter_IoU',%d,'difficult',1,'truncated',1,'occluded',1));" % (BASE_DIR, g_real_images_voc12train_all_gt_bbox_folder, g_real_images_voc12train_flip, g_real_images_voc12train_aug_n, g_real_images_voc12train_jitter_IoU)
-    print matlab_cmd
-    os.system('%s -nodisplay -r "try %s ; catch; end; quit;"' % (g_matlab_executable_path, matlab_cmd))
-
-    if not os.path.exists(g_real_images_lmdb_folder):
-        os.mkdir(g_real_images_lmdb_folder)
-    
-    # generate lmdb
-    input_file_list = [os.path.join(g_real_images_voc12train_all_gt_bbox_folder,name+'.txt') for name in g_shape_names]
-    output_file = os.path.join(g_real_images_voc12train_all_gt_bbox_folder, 'all.txt')
-    combine_files(input_file_list, output_file)
-    generate_image_view_lmdb(output_file, g_real_images_voc12train_all_gt_bbox_lmdb_prefix)
+        generate_image_view_lmdb(output_file, '%s_%s' % (output_file, keyword))
