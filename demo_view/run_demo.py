@@ -13,9 +13,9 @@ sys.path.append(os.path.join(g_render4cnn_root_folder, 'view_estimation'))
 from evaluation_helper import viewpoint
 
 if __name__ == '__main__':
-    
-    img_filenames = [os.path.join(BASE_DIR, 'aeroplane_image.jpg')]
-    class_idxs = [g_shape_names.index('aeroplane')]
+    img = sys.argv[1]
+    img_filenames = [os.path.join(BASE_DIR, img)]
+    class_idxs = 1
     output_result_file = os.path.join(BASE_DIR, 'est-view.txt')
     
     if not os.path.exists(output_result_file):

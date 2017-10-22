@@ -145,6 +145,8 @@ def load_vector_from_lmdb(dbname, feat_dim, max_num=float('Inf')):
 '''
 def batch_predict(model_deploy_file, model_params_file, BATCH_SIZE, result_keys, img_files, mean_file, resize_dim = 0): 
     # set imagenet_mean
+    print("batch_predict:")
+    print(img_files)
     if mean_file is None:
         imagenet_mean = np.array([104,117,123])
     else:
@@ -180,6 +182,8 @@ def batch_predict(model_deploy_file, model_params_file, BATCH_SIZE, result_keys,
         # prepare batch input data
         input_data = []
         for j in range(start_idx, end_idx):
+	    print("batch_predict:")
+	    print(img_files[j])
             im = caffe.io.load_image(img_files[j])
             if resize_dim > 0: im = skimage.transform.resize(im, (resize_dim, resize_dim))
             input_data.append(im)

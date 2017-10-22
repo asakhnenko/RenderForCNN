@@ -132,12 +132,21 @@ def obj_centened_camera_pos(dist, azimuth_deg, elevation_deg):
     z = (dist * math.sin(phi))
     return (x, y, z)
 
+from scipy.stats import truncnorm
+def my_truncnorm(mean, sd, bottom, top, amount):
+    a = (bottom-mean)/sd
+    b = (top-mean)/sd
+    return truncnorm(a, b, loc=mean, scale=sd).rvs(size=amount)
+
+
 # Input parameters
-shape_synset = sys.argv[-5]
-shape_md5 = sys.argv[-4]
-shape_view_params_file = sys.argv[-3]
-bg_folder = sys.argv[-2]
+shape_synset = sys.argv[-3]
+shape_md5 = sys.argv[-2]
+#shape_view_params_file = sys.argv[-2]
+#bg_folder = sys.argv[-2]
 syn_images_folder = sys.argv[-1]
+print(sys.argv)
+
 if not os.path.exists(syn_images_folder):
     os.mkdir(syn_images_folder)
 #view_params = [[float(x) for x in line.strip().split(' ')] for line in open(shape_view_params_file).readlines()]
@@ -145,12 +154,13 @@ if not os.path.exists(syn_images_folder):
 if not os.path.exists(syn_images_folder):
     os.makedirs(syn_images_folder)
 
+bpy.context.scene.render.alpha_mode = 'TRANSPARENT'
 #bpy.context.scene.render.use_shadows = False
 #bpy.context.scene.render.use_raytrace = False
 
 #size = bpy.data.objects['Drone'].dimensions
-from scipy.spatial import Delaunay
-bound_box = Delaunay(bpy.data.objects['Drone'].bound_box)
+#from scipy.spatial import Delaunay
+#bound_box = Delaunay(bpy.data.objects['Drone'].bound_box)
 
 bpy.data.objects['Lamp'].data.energy = 0
 
@@ -166,13 +176,21 @@ if 'Lamp' in list(bpy.data.objects.keys()):
     bpy.data.objects['Lamp'].select = True # remove default light
 bpy.ops.object.delete()
 
-# YOUR CODE START HERE
-count = 0
-for i in range(0, 20):
-    azimuth_deg = np.random.normal(0, 360, 1)[0]
-    elevation_deg = np.random.normal(0, 180, 1)[0]
-    theta_deg = np.random.normal(0, 360, 1)[0]
-    rho = np.random.normal(0, 5, 1)[0]
+azimuth_deg_dist = my_truncnorm(180, 90, 0, 360, 200)
+elevation_deg_dist = my_truncnorm(45, 20, 0, 180, 200)
+theta_deg_dist = my_truncnorm(0, 45, 0, 360, 200)
+rho_dist = my_truncnorm(2.5, 1.5, 0, 5, 200)
+
+
+for i in range(0, 200):
+    azimuth_deg = azimuth_deg_dist[i]
+    elevation_deg = elevation_deg_dist[i]
+    theta_deg = theta_deg_dist[i]
+    rho = rho_dist[i]
+
+    if azimuth_deg > 360 or elevation_deg > 180 or theta_deg > 360:
+        print("My truncnorm failed")
+        break
 
     # clear default lights
     bpy.ops.object.select_by_type(type='LAMP')
@@ -194,6 +212,12 @@ for i in range(0, 20):
         bpy.data.objects['Point'].data.energy = np.random.normal(g_syn_light_energy_mean, g_syn_light_energy_std)
 
     cx, cy, cz = obj_centened_camera_pos(rho, azimuth_deg, elevation_deg)
+
+    # Check if random point is outside the bounding box
+    #if bound_box.find_simplex(np.array([cx, cy, cz])) != -1:
+    #    print("Random point is within bounding box, skipping")
+    #    continue;
+
     q1 = camPosToQuaternion(cx, cy, cz)
     q2 = camRotQuaternion(cx, cy, cz, theta_deg)
     q = quaternionProduct(q2, q1)
@@ -208,23 +232,24 @@ for i in range(0, 20):
     # ** multiply tilt by -1 to match pascal3d annotations **
     theta_deg = (-1*theta_deg)%360
 
+
     ##-------- Adding BG---------------------
-    for f in os.listdir(bg_folder):
-        img = bpy.data.images.load(os.path.join(bg_folder, f))
-        for area in bpy.context.screen.areas:
-            if area.type == 'VIEW_3D':
-                space_data = area.spaces.active
-                bg = space_data.background_images.new()
-                bg.image = img
-                space_data.show_background_images = True
-                break
-        tex = bpy.data.textures.new("Texture.001", 'IMAGE')
-        tex.image = img
-        bpy.data.worlds['World'].active_texture = tex
-        bpy.context.scene.world.texture_slots[0].use_map_horizon = True
+    #for f in os.listdir(bg_folder):
+    #    img = bpy.data.images.load(os.path.join(bg_folder, f))
+    #    for area in bpy.context.screen.areas:
+    #        if area.type == 'VIEW_3D':
+    #            space_data = area.spaces.active
+    #            bg = space_data.background_images.new()
+    #            bg.image = img
+    #            space_data.show_background_images = True
+    #            break
+    #    tex = bpy.data.textures.new("Texture.001", 'IMAGE')
+    #    tex.image = img
+    #    bpy.data.worlds['World'].active_texture = tex
+    #    bpy.context.scene.world.texture_slots[0].use_map_horizon = True
     ##----------------------------------------
-        syn_image_file = './%d_%s_%s_a%03d_e%03d_t%03d_d%03d.png' % (count, shape_synset, shape_md5, round(azimuth_deg), round(elevation_deg), round(theta_deg), round(rho))
-        count += 1
-        bpy.data.scenes['Scene'].render.filepath = os.path.join(syn_images_folder, syn_image_file)
-        bpy.ops.render.render(write_still=True )
+    syn_image_file = './%s_%s_a%03d_e%03d_t%03d_d%03d.png' % (shape_synset, shape_md5, round(azimuth_deg), round(elevation_deg), round(theta_deg), round(rho*10))
+    #count += 1
+    bpy.data.scenes['Scene'].render.filepath = os.path.join(syn_images_folder, syn_image_file)
+    bpy.ops.render.render(write_still=True )
 

@@ -22,10 +22,10 @@ from caffe_utils import *
 '''
 def path2label(path):
     parts = os.path.basename(path).split('_')
-    class_idx = int(parts[1][0:])
-    azimuth = int(parts[3][1:]) % 360
-    elevation = int(parts[4][1:]) % 360
-    tilt = int(parts[5][1:]) % 360
+    class_idx = int(parts[0][0:])
+    azimuth = int(parts[2][1:]) % 360
+    elevation = int(parts[3][1:]) % 360
+    tilt = int(parts[4][1:]) % 360
     return (class_idx, azimuth, elevation, tilt)
 
 '''

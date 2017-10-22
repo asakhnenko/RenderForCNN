@@ -29,17 +29,18 @@ def viewpoint(img_filenames, class_idxs, output_result_file):
     model_deploy_file = g_caffe_deploy_file
     result_keys = g_caffe_prob_keys
     resize_dim = g_images_resize_dim
-    image_mean_file = g_image_mean_file
     
     # ** NETWORK FORWARD PASS **
-    probs_lists = batch_predict(model_deploy_file, model_params_file, batch_size, result_keys, img_filenames, image_mean_file, resize_dim)
+    print("Viewpoint")
+    print(img_filenames)
+    probs_lists = batch_predict(model_deploy_file, model_params_file, batch_size, result_keys, img_filenames, None, resize_dim)
     
     # EXTRACT PRED FROM PROBS
     preds = []
     for k in range(len(result_keys)):
         preds.append([])
     for i in range(len(img_filenames)):
-        class_idx = class_idxs[i]
+        class_idx = 1
         # pred is the class with highest prob within
         # class_idx*360~class_idx*360+360-1
         for k in range(len(result_keys)):
