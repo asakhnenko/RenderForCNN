@@ -19,14 +19,15 @@ if __name__ == '__main__':
         drone = Image.open(os.path.join(folder_with_drones, d))
 
         smaller_drone = drone.resize((int(drone.width * 0.3),int(drone.height * 0.3)))
-
+	count = 0
         for b in os.listdir(folder_with_bgs):
             bg = Image.open(os.path.join(folder_with_bgs, b)).convert('RGBA')
             fitting_bg = bg.resize((smaller_drone.width, smaller_drone.height))
 
 
             new_img = Image.composite(smaller_drone, fitting_bg, smaller_drone)
-            new_img_name = os.path.join(output_folder, '%s_%d.png' % (d[:-4], numpy.random.normal(0, 100, 1)[0]))
+            new_img_name = os.path.join(output_folder, '%s_%d.png' % (d[:-4], count))
             new_img.convert('RGB').save(new_img_name, "PNG")
 
+	    count = count + 1
             print('Saving image %s' % new_img_name)

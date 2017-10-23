@@ -176,10 +176,10 @@ if 'Lamp' in list(bpy.data.objects.keys()):
     bpy.data.objects['Lamp'].select = True # remove default light
 bpy.ops.object.delete()
 
-azimuth_deg_dist = my_truncnorm(180, 90, 0, 360, 200)
-elevation_deg_dist = my_truncnorm(45, 20, 0, 180, 200)
-theta_deg_dist = my_truncnorm(0, 45, 0, 360, 200)
-rho_dist = my_truncnorm(2.5, 1.5, 0, 5, 200)
+azimuth_deg_dist = my_truncnorm(180, 90, 0, 360, 50)
+elevation_deg_dist = my_truncnorm(45, 20, 0, 180, 50)
+theta_deg_dist = my_truncnorm(0, 45, 0, 360, 50)
+rho_dist = my_truncnorm(1, 0.5, 0, 5, 50)
 
 
 for i in range(0, 200):
