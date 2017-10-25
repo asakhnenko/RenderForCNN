@@ -176,17 +176,17 @@ if 'Lamp' in list(bpy.data.objects.keys()):
     bpy.data.objects['Lamp'].select = True # remove default light
 bpy.ops.object.delete()
 
-azimuth_deg_dist = my_truncnorm(180, 90, 0, 360, 50)
-elevation_deg_dist = my_truncnorm(45, 20, 0, 180, 50)
-theta_deg_dist = my_truncnorm(0, 45, 0, 360, 50)
+azimuth_deg_dist = my_truncnorm(180, 10, 0, 360, 50)
+elevation_deg_dist = my_truncnorm(45, 10, 0, 180, 50)
+theta_deg_dist = my_truncnorm(0, 10, 0, 360, 50)
 rho_dist = my_truncnorm(1, 0.5, 0, 5, 50)
 
 
-for i in range(0, 200):
+for i in range(0, 50):
     azimuth_deg = azimuth_deg_dist[i]
     elevation_deg = elevation_deg_dist[i]
     theta_deg = theta_deg_dist[i]
-    rho = rho_dist[i]
+    rho = 0.3
 
     if azimuth_deg > 360 or elevation_deg > 180 or theta_deg > 360:
         print("My truncnorm failed")

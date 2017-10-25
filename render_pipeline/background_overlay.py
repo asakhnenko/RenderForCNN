@@ -18,7 +18,7 @@ if __name__ == '__main__':
     for d in os.listdir(folder_with_drones):
         drone = Image.open(os.path.join(folder_with_drones, d))
 
-        smaller_drone = drone.resize((int(drone.width * 0.3),int(drone.height * 0.3)))
+        smaller_drone = drone.resize((int(drone.width * 0.1),int(drone.height * 0.1)))
 	count = 0
         for b in os.listdir(folder_with_bgs):
             bg = Image.open(os.path.join(folder_with_bgs, b)).convert('RGBA')
