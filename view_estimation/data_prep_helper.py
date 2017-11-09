@@ -116,10 +116,10 @@ def generate_image_view_lmdb(image_label_file, output_lmdb):
 
     if not os.path.exists(output_lmdb+'_label'):
         write_vector_lmdb(tmp_label_fout.name, output_lmdb+'_label')
-    print "Label DB done ..."
+    print("Label DB done ...")
     if not os.path.exists(output_lmdb+'_image'):
         write_image_lmdb(image_label_file, output_lmdb+'_image')  
-    print "Image DB done ..."
+    print("Image DB done ...")
     
     # clean up
     os.system('rm %s' % (tmp_label_fout.name))

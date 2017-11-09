@@ -4,13 +4,13 @@ layer {
   type: 'Data'
   top: "data"
   data_param {
-    source: "/home/aly/DroneApp/RenderForCNN/data/drone_small_lmdb/all_train.txt_train_image"
+    source: "/net/store/scratch/odd/valid_until_30_nov_2017/asakhnenko/drone_360_simple_lmdb/all_train.txt_train_image"
     backend: LMDB
-    batch_size: 24
+    batch_size: 96
   }
   transform_param {
     crop_size: 227
-    mean_file: "/home/aly/DroneApp/RenderForCNN/data/drone_small_lmdb/train_mean.binaryproto"
+    mean_file: "/net/store/scratch/odd/valid_until_30_nov_2017/asakhnenko/drone_360_simple_lmdb/train_mean.binaryproto"
     mirror: false
   }
   include: { phase: TRAIN }
@@ -20,9 +20,9 @@ layer {
   type: 'Data'
   top: "label"
   data_param {
-    source: "/home/aly/DroneApp/RenderForCNN/data/drone_small_lmdb/all_train.txt_train_label"
+    source: "/net/store/scratch/odd/valid_until_30_nov_2017/asakhnenko/drone_360_simple_lmdb/all_train.txt_train_label"
     backend: LMDB
-    batch_size: 24
+    batch_size: 96
   }
   include: { phase: TRAIN }
 }
@@ -31,13 +31,13 @@ layer {
   type: 'Data'
   top: "data"
   data_param {
-    source: "/home/aly/DroneApp/RenderForCNN/data/drone_small_lmdb/all_test.txt_test_image"
+    source: "/net/store/scratch/odd/valid_until_30_nov_2017/asakhnenko/drone_360_simple_lmdb/all_test.txt_test_image"
     backend: LMDB
-    batch_size: 24
+    batch_size: 96
   }
   transform_param {
     crop_size: 227
-    mean_file: "/home/aly/DroneApp/RenderForCNN/data/drone_small_lmdb/test_mean.binaryproto"
+    mean_file: "/net/store/scratch/odd/valid_until_30_nov_2017/asakhnenko/drone_360_simple_lmdb/test_mean.binaryproto"
     mirror: false
   }
   include: { phase: TEST }
@@ -47,9 +47,9 @@ layer {
   type: 'Data'
   top: "label"
   data_param {
-    source: "/home/aly/DroneApp/RenderForCNN/data/drone_small_lmdb/all_test.txt_test_label"
+    source: "/net/store/scratch/odd/valid_until_30_nov_2017/asakhnenko/drone_360_simple_lmdb/all_test.txt_test_label"
     backend: LMDB
-    batch_size: 24
+    batch_size: 96
   }
   include: { phase: TEST }
 }
@@ -319,10 +319,54 @@ layer {
 }
 
 
+
+layer {
+  name: "fcdrone"
+  type: 'InnerProduct'
+  bottom: "fc7"
+  top: "fcdrone"
+  param{
+    lr_mult: 0.001
+    decay_mult: 0
+  }
+  param{
+    lr_mult: 0.001
+    decay_mult: 1
+  }
+  inner_product_param {
+    num_output: 4096
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "reluDrone"
+  type: 'ReLU'
+  bottom: "fcdrone"
+  top: "fcdrone"
+}
+layer {
+  name: "dropDrone"
+  type: 'Dropout'
+  bottom: "fcdrone"
+  top: "fcdrone"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+
+
 layer {
   name: "fc-azimuth"
   type: 'InnerProduct'
-  bottom: "fc7"
+  bottom: "fcdrone"
   top: "fc-azimuth"
   param{
     lr_mult: 0
@@ -368,7 +412,7 @@ layer {
 layer {
   name: "fc-elevation"
   type: 'InnerProduct'
-  bottom: "fc7"
+  bottom: "fcdrone"
   top: "fc-elevation"
   param{
     lr_mult: 0
@@ -415,7 +459,7 @@ layer {
 layer {
   name: "fc-tilt"
   type: 'InnerProduct'
-  bottom: "fc7"
+  bottom: "fcdrone"
   top: "fc-tilt"
   param{
     lr_mult: 0

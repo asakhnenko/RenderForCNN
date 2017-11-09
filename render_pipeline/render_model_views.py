@@ -57,10 +57,10 @@ def camPosToQuaternion(cx, cy, cz):
 def quaternionFromYawPitchRoll(yaw, pitch, roll):
     c1 = math.cos(yaw / 2.0)
     c2 = math.cos(pitch / 2.0)
-    c3 = math.cos(roll / 2.0)    
+    c3 = math.cos(roll / 2.0)
     s1 = math.sin(yaw / 2.0)
     s2 = math.sin(pitch / 2.0)
-    s3 = math.sin(roll / 2.0)    
+    s3 = math.sin(roll / 2.0)
     q1 = c1 * c2 * c3 + s1 * s2 * s3
     q2 = c1 * c2 * s3 - s1 * s2 * c3
     q3 = c1 * s2 * c3 + s1 * c2 * s3
@@ -76,8 +76,8 @@ def camPosToQuaternion(cx, cy, cz):
     camDist = math.sqrt(cx * cx + cy * cy + cz * cz)
     cx = cx / camDist
     cy = cy / camDist
-    cz = cz / camDist    
-    t = math.sqrt(cx * cx + cy * cy) 
+    cz = cz / camDist
+    t = math.sqrt(cx * cx + cy * cy)
     tx = cx / t
     ty = cy / t
     yaw = math.acos(ty)
@@ -88,16 +88,16 @@ def camPosToQuaternion(cx, cy, cz):
     #roll = math.acos(tx * cx + ty * cy)
     roll = math.acos(tmp)
     if cz < 0:
-        roll = -roll    
+        roll = -roll
     #print("%f %f %f" % (yaw, pitch, roll))
-    q2a, q2b, q2c, q2d = quaternionFromYawPitchRoll(yaw, pitch, roll)    
+    q2a, q2b, q2c, q2d = quaternionFromYawPitchRoll(yaw, pitch, roll)
     q1 = q1a * q2a - q1b * q2b - q1c * q2c - q1d * q2d
     q2 = q1b * q2a + q1a * q2b + q1d * q2c - q1c * q2d
     q3 = q1c * q2a - q1d * q2b + q1a * q2c + q1b * q2d
     q4 = q1d * q2a + q1c * q2b - q1b * q2c + q1a * q2d
     return (q1, q2, q3, q4)
 
-def camRotQuaternion(cx, cy, cz, theta): 
+def camRotQuaternion(cx, cy, cz, theta):
     theta = theta / 180.0 * math.pi
     camDist = math.sqrt(cx * cx + cy * cy + cz * cz)
     cx = -cx / camDist
@@ -109,7 +109,7 @@ def camRotQuaternion(cx, cy, cz, theta):
     q4 = -cz * math.sin(theta * 0.5)
     return (q1, q2, q3, q4)
 
-def quaternionProduct(qx, qy): 
+def quaternionProduct(qx, qy):
     a = qx[0]
     b = qx[1]
     c = qx[2]
@@ -121,7 +121,7 @@ def quaternionProduct(qx, qy):
     q1 = a * e - b * f - c * g - d * h
     q2 = a * f + b * e + c * h - d * g
     q3 = a * g - b * h + c * e + d * f
-    q4 = a * h + b * g - c * f + d * e    
+    q4 = a * h + b * g - c * f + d * e
     return (q1, q2, q3, q4)
 
 def obj_centened_camera_pos(dist, azimuth_deg, elevation_deg):
@@ -133,6 +133,7 @@ def obj_centened_camera_pos(dist, azimuth_deg, elevation_deg):
     return (x, y, z)
 
 from scipy.stats import truncnorm
+
 def my_truncnorm(mean, sd, bottom, top, amount):
     a = (bottom-mean)/sd
     b = (top-mean)/sd
@@ -176,17 +177,17 @@ if 'Lamp' in list(bpy.data.objects.keys()):
     bpy.data.objects['Lamp'].select = True # remove default light
 bpy.ops.object.delete()
 
-azimuth_deg_dist = my_truncnorm(180, 10, 0, 360, 50)
-elevation_deg_dist = my_truncnorm(45, 10, 0, 180, 50)
-theta_deg_dist = my_truncnorm(0, 10, 0, 360, 50)
-rho_dist = my_truncnorm(1, 0.5, 0, 5, 50)
+azimuth_deg_dist = my_truncnorm(180, 90, 0, 360, 360)
+elevation_deg_dist = my_truncnorm(0, 45, -90, 90, 360)
+theta_deg_dist = my_truncnorm(0, 45, -180, 180, 360)
+#rho_dist = my_truncnorm(1, 0.5, 0, 5, 360)
 
 
-for i in range(0, 50):
-    azimuth_deg = azimuth_deg_dist[i]
-    elevation_deg = elevation_deg_dist[i]
-    theta_deg = theta_deg_dist[i]
-    rho = 0.3
+for i in range(0, 360):
+    azimuth_deg = 360 - abs(azimuth_deg_dist[i]) if azimuth_deg_dist[i] < 0 else azimuth_deg_dist[i]
+    elevation_deg = 180 - abs(elevation_deg_dist[i]) if elevation_deg_dist[i] < 0 else elevation_deg_dist[i]
+    theta_deg = 360 - abs(theta_deg_dist[i]) if theta_deg_dist[i] < 0 else theta_deg_dist[i]
+    rho = 0.5
 
     if azimuth_deg > 360 or elevation_deg > 180 or theta_deg > 360:
         print("My truncnorm failed")
@@ -222,7 +223,7 @@ for i in range(0, 50):
     q2 = camRotQuaternion(cx, cy, cz, theta_deg)
     q = quaternionProduct(q2, q1)
     camObj.location[0] = cx
-    camObj.location[1] = cy 
+    camObj.location[1] = cy
     camObj.location[2] = cz
     camObj.rotation_mode = 'QUATERNION'
     camObj.rotation_quaternion[0] = q[0]
@@ -252,4 +253,3 @@ for i in range(0, 50):
     #count += 1
     bpy.data.scenes['Scene'].render.filepath = os.path.join(syn_images_folder, syn_image_file)
     bpy.ops.render.render(write_still=True )
-
