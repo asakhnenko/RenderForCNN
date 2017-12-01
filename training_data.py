@@ -46,11 +46,11 @@ if not tilt_std:
 bg_folder_name = input('Enter the background folder : ')
 if not bg_folder_name:
     bg_folder_name = last_data[9]
-    print()
+
 bg_folder = os.path.abspath(os.path.join(global_variables.g_data_folder, bg_folder_name))
 bg_amount = len(os.listdir(bg_folder))
 
-dataset_name = 'drone_'+str(dataset_id)+'_'+views_amount+'_'+bg_folder_name
+dataset_name = 'drone_'+str(dataset_id)+'_'+views_amount
 path_to_dataset= os.path.abspath(os.path.join(global_variables.g_datasets_folder, dataset_name))
 
 writer = csv.writer(csvfile, delimiter=',')
@@ -78,6 +78,29 @@ os.system("blender " + model + " --background --python render_pipeline/render_mo
             " " + tilt_mean + " " + tilt_std +
             " 1 2 " + path_to_dataset)
 
+print('\n\nOverlaying background\n\n')
+
+path_to_dataset_with_bg = path_to_dataset + "_" + bg_folder_name
+os.system("python2 render_pipeline/background_overlay.py "
+            + path_to_dataset + " "
+            + bg_folder + " "
+            + path_to_dataset_with_bg)
+
 print('\n\nCreating LMDB dataset\n\n')
 
-#subprocess.Popen(["python"path_to_dataset])
+path_to_lmdb = path_to_dataset + "_lmdb"
+os.system("python2 view_estimation/prepare_training_data.py "
+            + path_to_dataset_with_bg + " "
+            + path_to_lmdb + " "
+            + global_variables.g_data_folder + "/drone_types.txt")
+
+print('\n\nCalculating the mean\n\n')
+path_to_train_mean = path_to_lmdb + "/train_mean.binaryproto"
+os.system(global_variables.g_caffe_tools_path + "/compute_image_mean "
+            + path_to_lmdb + "/all_train.txt_train_image "
+            + path_to_train_mean)
+
+path_to_test_mean = path_to_lmdb + "/test_mean.binaryproto"
+os.system(global_variables.g_caffe_tools_path + "/compute_image_mean "
+            + path_to_lmdb + "/all_test.txt_test_image "
+            + path_to_test_mean)

@@ -140,13 +140,13 @@ def my_truncnorm(mean, sd, bottom, top, amount):
 
 
 # Input parameters
-views_amount = sys.argv[-10]
-azimuth_mean = sys.argv[-9]
-azimuth_std = sys.argv[-8]
-elev_mean = sys.argv[-7]
-elev_std = sys.argv[-6]
-tilt_mean = sys.argv[-5]
-tilt_std = sys.argv[-4]
+views_amount = int(sys.argv[-10])
+azimuth_mean = int(sys.argv[-9])
+azimuth_std = int(sys.argv[-8])
+elev_mean = int(sys.argv[-7])
+elev_std = int(sys.argv[-6])
+tilt_mean = int(sys.argv[-5])
+tilt_std = int(sys.argv[-4])
 shape_synset = sys.argv[-3]
 shape_md5 = sys.argv[-2]
 destination_folder = sys.argv[-1]
@@ -251,7 +251,7 @@ for i in range(0, views_amount):
     #    bpy.data.worlds['World'].active_texture = tex
     #    bpy.context.scene.world.texture_slots[0].use_map_horizon = True
     ##----------------------------------------
-    syn_image_file = './%s_%s_a%03d_e%03d_t%03d_d%03d.png' % (shape_synset, shape_md5, round(azimuth_deg), round(elevation_deg), round(theta_deg), round(rho*10))
+    image_file = './%s_%s_a%03d_e%03d_t%03d_d%03d.png' % (shape_synset, shape_md5, round(azimuth_deg), round(elevation_deg), round(theta_deg), round(rho*10))
     #count += 1
-    bpy.data.scenes['Scene'].render.filepath = os.path.join(destination_folder, syn_image_file)
+    bpy.data.scenes['Scene'].render.filepath = os.path.join(destination_folder, image_file)
     bpy.ops.render.render(write_still=True )
