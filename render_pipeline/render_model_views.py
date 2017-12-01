@@ -89,7 +89,6 @@ def camPosToQuaternion(cx, cy, cz):
     roll = math.acos(tmp)
     if cz < 0:
         roll = -roll
-    #print("%f %f %f" % (yaw, pitch, roll))
     q2a, q2b, q2c, q2d = quaternionFromYawPitchRoll(yaw, pitch, roll)
     q1 = q1a * q2a - q1b * q2b - q1c * q2c - q1d * q2d
     q2 = q1b * q2a + q1a * q2b + q1d * q2c - q1c * q2d
@@ -141,19 +140,22 @@ def my_truncnorm(mean, sd, bottom, top, amount):
 
 
 # Input parameters
+views_amount = sys.argv[-10]
+azimuth_mean = sys.argv[-9]
+azimuth_std = sys.argv[-8]
+elev_mean = sys.argv[-7]
+elev_std = sys.argv[-6]
+tilt_mean = sys.argv[-5]
+tilt_std = sys.argv[-4]
 shape_synset = sys.argv[-3]
 shape_md5 = sys.argv[-2]
-#shape_view_params_file = sys.argv[-2]
-#bg_folder = sys.argv[-2]
-syn_images_folder = sys.argv[-1]
-print(sys.argv)
+destination_folder = sys.argv[-1]
 
-if not os.path.exists(syn_images_folder):
-    os.mkdir(syn_images_folder)
-#view_params = [[float(x) for x in line.strip().split(' ')] for line in open(shape_view_params_file).readlines()]
+if not destination_folder:
+	sys.exit("No destination file given")
 
-if not os.path.exists(syn_images_folder):
-    os.makedirs(syn_images_folder)
+if not os.path.exists(destination_folder):
+    os.mkdir(destination_folder)
 
 bpy.context.scene.render.alpha_mode = 'TRANSPARENT'
 #bpy.context.scene.render.use_shadows = False
@@ -177,17 +179,17 @@ if 'Lamp' in list(bpy.data.objects.keys()):
     bpy.data.objects['Lamp'].select = True # remove default light
 bpy.ops.object.delete()
 
-azimuth_deg_dist = my_truncnorm(180, 90, 0, 360, 360)
-elevation_deg_dist = my_truncnorm(0, 45, -90, 90, 360)
-theta_deg_dist = my_truncnorm(0, 45, -180, 180, 360)
+azimuth_deg_dist = my_truncnorm(azimuth_mean, azimuth_std, -180, 180, views_amount)
+elevation_deg_dist = my_truncnorm(elev_mean, elev_std, -90, 90, views_amount)
+theta_deg_dist = my_truncnorm(tilt_mean, tilt_std, -180, 180, views_amount)
 #rho_dist = my_truncnorm(1, 0.5, 0, 5, 360)
 
 
-for i in range(0, 360):
-    azimuth_deg = 360 - abs(azimuth_deg_dist[i]) if azimuth_deg_dist[i] < 0 else azimuth_deg_dist[i]
-    elevation_deg = 180 - abs(elevation_deg_dist[i]) if elevation_deg_dist[i] < 0 else elevation_deg_dist[i]
-    theta_deg = 360 - abs(theta_deg_dist[i]) if theta_deg_dist[i] < 0 else theta_deg_dist[i]
-    rho = 0.5
+for i in range(0, views_amount):
+    azimuth_deg = round(360 - abs(azimuth_deg_dist[i]) if azimuth_deg_dist[i] < 0 else azimuth_deg_dist[i])
+    elevation_deg = round(180 - abs(elevation_deg_dist[i]) if elevation_deg_dist[i] < 0 else elevation_deg_dist[i])
+    theta_deg = round(360 - abs(theta_deg_dist[i]) if theta_deg_dist[i] < 0 else theta_deg_dist[i])
+    rho = 0.3
 
     if azimuth_deg > 360 or elevation_deg > 180 or theta_deg > 360:
         print("My truncnorm failed")
@@ -251,5 +253,5 @@ for i in range(0, 360):
     ##----------------------------------------
     syn_image_file = './%s_%s_a%03d_e%03d_t%03d_d%03d.png' % (shape_synset, shape_md5, round(azimuth_deg), round(elevation_deg), round(theta_deg), round(rho*10))
     #count += 1
-    bpy.data.scenes['Scene'].render.filepath = os.path.join(syn_images_folder, syn_image_file)
+    bpy.data.scenes['Scene'].render.filepath = os.path.join(destination_folder, syn_image_file)
     bpy.ops.render.render(write_still=True )
