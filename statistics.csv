@@ -1,0 +1,5 @@
+id,Drone Model Name,Views Amount,Azimuth Mean,Azimuth Std,Elevation Mean,Elevation Std,Tilt Mean,Tilt Std,Bgs,Amount of Bgs,Dataset name,Performance
+1,DAVIdDroneTex,200,180,20,90,20,180,20,BGs_simple,51,Drone_1_200_BGs_simple,
+2,DAVIdDroneTex,200,180,20,90,20,180,20,BGs_simple,51,drone_2_200_BGs_simple
+3,DAVIdDroneTex,10,180,20,90,20,180,20,BGs_simple,51,drone_3_10_BGs_simple
+4,DAVIdDroneTex,10,180,20,90,20,180,20,BGs_simple,51,drone_4_10_BGs_simple
