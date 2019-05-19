@@ -29,17 +29,18 @@ def viewpoint(img_filenames, class_idxs, output_result_file):
     model_deploy_file = g_caffe_deploy_file
     result_keys = g_caffe_prob_keys
     resize_dim = g_images_resize_dim
-    image_mean_file = g_image_mean_file
     
     # ** NETWORK FORWARD PASS **
-    probs_lists = batch_predict(model_deploy_file, model_params_file, batch_size, result_keys, img_filenames, image_mean_file, resize_dim)
+    print("Viewpoint")
+    print(img_filenames)
+    probs_lists = batch_predict(model_deploy_file, model_params_file, batch_size, result_keys, img_filenames, None, resize_dim)
     
     # EXTRACT PRED FROM PROBS
     preds = []
     for k in range(len(result_keys)):
         preds.append([])
     for i in range(len(img_filenames)):
-        class_idx = class_idxs[i]
+        class_idx = 1
         # pred is the class with highest prob within
         # class_idx*360~class_idx*360+360-1
         for k in range(len(result_keys)):
@@ -267,12 +268,12 @@ def test_avp_nv(cls_names, img_name_file_list, det_bbox_mat_file_list, result_fo
    
         # combine det and view
         matlab_cmd = "addpath('%s'); combine_bbox_view('%s','%s','%s','%s', %d);" % (BASE_DIR, cls_names[i], det_bbox_mat_file_list[i], output_result_file, result_folder, 0)
-        print matlab_cmd
+#        print matlab_cmd
         os.system('%s -nodisplay -r "try %s ; catch; end; quit;"' % (g_matlab_executable_path, matlab_cmd))
     
     # compute AVP-NV for all classes
     matlab_cmd = "addpath('%s'); test_det('%s');" % (BASE_DIR, result_folder)
-    print matlab_cmd
+#    print matlab_cmd
     os.system('%s -nodisplay -r "try %s ; catch; end; quit;"' % (g_matlab_executable_path, matlab_cmd))
 
 
@@ -310,5 +311,4 @@ def test_vp_acc(cls_names, img_name_file_list, result_folder, view_label_folder)
 
     # compute Acc and MedErr
     matlab_cmd = "addpath('%s'); test_gt('%s','%s');" % (BASE_DIR, result_folder, view_label_folder)
-    print matlab_cmd
     os.system('%s -nodisplay -r "try %s ; catch; end; quit;"' % (g_matlab_executable_path, matlab_cmd))

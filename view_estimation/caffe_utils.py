@@ -71,7 +71,7 @@ def write_image_lmdb(image_file, output_lmdb):
                 batch_ims = [(img_filenames[k+in_idx], k+in_idx) \
                              for k in range(min(batch_N, N-in_idx))]
                 batch_datums = p.map(imglabel2datum, batch_ims)
-            in_txn.put('{:0>10d}'.format(in_idx), batch_datums[in_idx % batch_N])
+            in_txn.put(('{:0>10d}'.format(in_idx)).encode('utf-8'), batch_datums[in_idx % batch_N])
     in_db.close()
 
 '''
@@ -98,7 +98,7 @@ def write_vector_lmdb(input_txt_file, output_lmdb):
             datum = np.array([float(x) for x in ll])
             datum = np.reshape(datum, [len(datum),1,1])
             datum = caffe.io.array_to_datum(datum, in_idx)
-            in_txn.put('{:0>10d}'.format(in_idx), datum.SerializeToString())
+            in_txn.put('{:0>10d}'.format(in_idx).encode('utf-8'), datum.SerializeToString())
     in_db.close()
 
 
@@ -108,14 +108,14 @@ def write_vector_lmdb(input_txt_file, output_lmdb):
 '''
 def load_vector_from_lmdb(dbname, feat_dim, max_num=float('Inf')):
     in_db = lmdb.open(dbname, map_size=int(1e12))
-    print dbname, in_db.stat()
+    print(dbname, in_db.stat())
 
     N = min(in_db.stat()['entries'], max_num) 
     feats = np.zeros((N,int(feat_dim)))
     
     with in_db.begin(write=False) as in_txn:
         for k in range(N):
-            print k
+            print(k)
             keyname = '%010d' % k
             a = in_txn.get(keyname)
             datum = caffe_pb2.Datum()
@@ -145,17 +145,21 @@ def load_vector_from_lmdb(dbname, feat_dim, max_num=float('Inf')):
 '''
 def batch_predict(model_deploy_file, model_params_file, BATCH_SIZE, result_keys, img_files, mean_file, resize_dim = 0): 
     # set imagenet_mean
+    print("batch_predict:")
+    print(img_files)
     if mean_file is None:
         imagenet_mean = np.array([104,117,123])
     else:
         imagenet_mean = np.load(mean_file)
         net_parameter = caffe_pb2.NetParameter()
         text_format.Merge(open(model_deploy_file, 'r').read(), net_parameter)
-        print net_parameter
-        print net_parameter.input_dim, imagenet_mean.shape
+        print(net_parameter)
+        print(net_parameter.input_dim, imagenet_mean.shape)
         ratio = resize_dim*1.0/imagenet_mean.shape[1]
         imagenet_mean = scipy.ndimage.zoom(imagenet_mean, (1, ratio, ratio))
     
+    print("TEST!")
+    print(model_deploy_file)
     # INIT NETWORK - NEW CAFFE VERSION
     net = caffe.Net(model_deploy_file, model_params_file, caffe.TEST)
     transformer = caffe.io.Transformer({'data': net.blobs['data'].data.shape})
@@ -175,20 +179,22 @@ def batch_predict(model_deploy_file, model_params_file, BATCH_SIZE, result_keys,
     for k in range(batch_num):
         start_idx = BATCH_SIZE * k
         end_idx = min(BATCH_SIZE * (k+1), len(img_files))
-        print 'batch: %d/%d, idx: %d to %d' % (k, batch_num, start_idx, end_idx)
+        print('batch: %d/%d, idx: %d to %d' % (k, batch_num, start_idx, end_idx))
     
         # prepare batch input data
         input_data = []
         for j in range(start_idx, end_idx):
-            im = caffe.io.load_image(img_files[j])
-            if resize_dim > 0: im = skimage.transform.resize(im, (resize_dim, resize_dim))
-            input_data.append(im)
+    	    print("batch_predict:")
+    	    print(img_files[j])
+    	    im = caffe.io.load_image(img_files[j])
+    	    if resize_dim > 0: im = skimage.transform.resize(im, (resize_dim, resize_dim))
+    	    input_data.append(im)
         for j in range(BATCH_SIZE - len(input_data)):
             input_data.append(im)
         inputs = input_data
 
         # foward pass!
-        net.blobs['data'].data[...] = map(lambda x: transformer.preprocess('data', x), input_data)
+        net.blobs['data'].data[...] = list(map(lambda x: transformer.preprocess('data', x), input_data))
         out = net.forward()
     
         for i,key in enumerate(result_keys):
